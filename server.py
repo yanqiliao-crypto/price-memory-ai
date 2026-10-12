@@ -4,8 +4,20 @@ from urllib.parse import urlparse,parse_qs
 import numpy as np
 import pandas as pd
 BASE=os.path.dirname(os.path.abspath(__file__))
-frames=[pd.read_csv(os.path.join(BASE,'data',x)) for x in ['2017_2021.csv','2022_2026.csv']]
-df=pd.concat(frames,ignore_index=True)
+# DEMO ONLY: deterministic synthetic prices, no licensed market data included.
+# This deployment is a UI demonstration, NOT historical TXF market statistics.
+rng=np.random.default_rng(20261013)
+times=[]
+for day in pd.bdate_range('2026-08-03',periods=35):
+ for start,steps in [('08:45',60),('15:00',90)]:
+  times.extend(pd.date_range(str(day.date())+' '+start,periods=steps,freq='5min'))
+changes=rng.normal(0,15,len(times))
+close=np.round(23000+np.cumsum(changes)).astype(int)
+open_=np.r_[23000,close[:-1]]
+spread=rng.integers(3,23,len(times))
+high=np.maximum(open_,close)+spread
+low=np.minimum(open_,close)-spread
+df=pd.DataFrame({'日期':[x.strftime('%Y-%m-%d') for x in times], '時間':[x.strftime('%H:%M') for x in times], '開盤價':open_, '最高價':high, '最低價':low, '收盤價':close})
 df['dt']=pd.to_datetime(df['日期'].astype(str)+' '+df['時間'].astype(str),errors='coerce')
 df=df.dropna(subset=['dt']).sort_values('dt').drop_duplicates('dt',keep='last').reset_index(drop=True)
 for col in ['開盤價','最高價','最低價','收盤價']:df[col]=pd.to_numeric(df[col],errors='coerce')
@@ -45,12 +57,12 @@ class Handler(SimpleHTTPRequestHandler):
     examples=[{'t':str(df.dt.iloc[j])[:16], 'change':round(float(delta[j]*100),2)} for j in recent[-5:][::-1]]
     current=int(c[i]); levels=sorted(set([z['lo'] for z in zones]+[z['hi'] for z in zones]+([int(prevhigh[i])] if np.isfinite(prevhigh[i]) else [])+([int(prevlow[i])] if np.isfinite(prevlow[i]) else [])))
     above=next((x for x in levels if x>current),None);below=next((x for x in levels[::-1] if x<current),None)
-    result={'index':i,'total':n,'timestamp':str(df.dt.iloc[i])[:16], 'session':session[i], 'current':current,'ohlc':{'open':int(o[i]),'high':int(h[i]),'low':int(l[i]),'close':current},'candles':candles,'event':event[i],'high50':int(prevhigh[i]) if np.isfinite(prevhigh[i]) else None,'low50':int(prevlow[i]) if np.isfinite(prevlow[i]) else None,'zones':zones,'above':above,'below':below,'sample':cnt,'rates':rates,'baseline':baserates,'examples':examples,'rule':'後續30分鐘收盤變動 > +0.1% 為上漲，< -0.1% 為下跌，其餘為震盪；同盤別、同事件，且未跨休市時段。'}
+    result={'index':i,'total':n,'timestamp':str(df.dt.iloc[i])[:16], 'session':session[i], 'current':current,'ohlc':{'open':int(o[i]),'high':int(h[i]),'low':int(l[i]),'close':current},'candles':candles,'event':event[i],'high50':int(prevhigh[i]) if np.isfinite(prevhigh[i]) else None,'low50':int(prevlow[i]) if np.isfinite(prevlow[i]) else None,'zones':zones,'above':above,'below':below,'sample':cnt,'rates':rates,'baseline':baserates,'examples':examples,'demo':True,'rule':'【模擬資料，非真實市場統計】後續30分鐘收盤變動 > +0.1% 為上漲，< -0.1% 為下跌，其餘為震盪；同盤別、同事件，且未跨休市時段。'}
     body=json.dumps(result,ensure_ascii=False).encode('utf-8');self.send_response(200);self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
    except Exception as ex:
     body=json.dumps({'error':str(ex)}).encode();self.send_response(500);self.end_headers();self.wfile.write(body)
   else:super().do_GET()
 if __name__=='__main__':
- print(f'已載入 {n:,} 根K線，{df.dt.iloc[0]} ～ {df.dt.iloc[-1]}')
+ print(f'已載入模擬資料 {n:,} 根K線，{df.dt.iloc[0]} ～ {df.dt.iloc[-1]}')
  print('伺服器已啟動')
  ThreadingHTTPServer(('0.0.0.0',int(os.environ.get('PORT','8765'))),Handler).serve_forever()
