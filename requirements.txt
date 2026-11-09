@@ -1,2 +1,1 @@
-numpy>=1.26,<3
-pandas>=2.1,<3
+# Public demo uses Python 3 standard library only.
