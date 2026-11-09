@@ -1,0 +1,89 @@
+{
+  "source": "離線實驗預先計算的真實歷史資料測試摘要；本網站未重新訓練或推論真實台指期資料。",
+  "experiment": "2017–2026 五分鐘 OHLC；未來連續6根K線（30分鐘）收盤報酬 ±0.1% 分為下跌、震盪、上漲。",
+  "split": {
+    "train": "2017–2023",
+    "validation": "2024–2025",
+    "test": "2026/01–2026/08/07"
+  },
+  "total_rows": 511447,
+  "usable_rows": 252143,
+  "last_data": "2026-08-07 13:40:00",
+  "models": {
+    "LightGBM": {
+      "train": {
+        "n": 179297,
+        "auc_macro_ovr": 0.764207,
+        "accuracy": 0.751948,
+        "brier_multiclass": 0.355123,
+        "log_loss": 0.635615
+      },
+      "valid": {
+        "n": 55773,
+        "auc_macro_ovr": 0.689731,
+        "accuracy": 0.624173,
+        "brier_multiclass": 0.495533,
+        "log_loss": 0.855788
+      },
+      "test": {
+        "n": 17073,
+        "auc_macro_ovr": 0.652074,
+        "accuracy": 0.483161,
+        "brier_multiclass": 0.604947,
+        "log_loss": 1.011065
+      }
+    },
+    "Logistic": {
+      "train": {
+        "n": 179297,
+        "auc_macro_ovr": 0.731226,
+        "accuracy": 0.74598,
+        "brier_multiclass": 0.37231,
+        "log_loss": 0.677964
+      },
+      "valid": {
+        "n": 55773,
+        "auc_macro_ovr": 0.681141,
+        "accuracy": 0.62299,
+        "brier_multiclass": 0.507924,
+        "log_loss": 0.886077
+      },
+      "test": {
+        "n": 17073,
+        "auc_macro_ovr": 0.64666,
+        "accuracy": 0.476952,
+        "brier_multiclass": 0.624879,
+        "log_loss": 1.078651
+      }
+    },
+    "Train-prior baseline": {
+      "train": {
+        "n": 179297,
+        "auc_macro_ovr": 0.5,
+        "accuracy": 0.743381,
+        "brier_multiclass": 0.414455,
+        "log_loss": 0.747352
+      },
+      "valid": {
+        "n": 55773,
+        "auc_macro_ovr": 0.5,
+        "accuracy": 0.6158,
+        "brier_multiclass": 0.571368,
+        "log_loss": 0.971374
+      },
+      "test": {
+        "n": 17073,
+        "auc_macro_ovr": 0.5,
+        "accuracy": 0.43478,
+        "brier_multiclass": 0.794023,
+        "log_loss": 1.289294
+      }
+    }
+  },
+  "test_auc_by_class": {
+    "down": 0.627193,
+    "flat": 0.706211,
+    "up": 0.622819
+  },
+  "caveat": "AUC 為三分類 One-vs-Rest macro 平均，非交易勝率；未驗證交易成本、滑價、模型機率校準及真實交易獲利；無法從本展示版獨立重算。"
+}
